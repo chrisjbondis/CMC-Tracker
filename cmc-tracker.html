@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CMC Tracker">
+<meta name="theme-color" content="#0a0c10">
+<title>CMC Tracker</title>
+
+<!-- PWA manifest inline -->
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22CMC%20Tracker%22%2C%22short_name%22%3A%22CMC%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a0c10%22%2C%22theme_color%22%3A%22%230a0c10%22%7D">
+
+<!-- Apple touch icon (green chart icon) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230a0c10'/%3E%3Ctext y='.9em' font-size='80' x='10'%3E📊%3C/text%3E%3C/svg%3E">
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#0a0c10;overscroll-behavior:none}
+:root{--bg:#0a0c10;--s1:#111318;--s2:#181c24;--bd:#1e2330;--ac:#00e5a0;--rd:#ff4560;--tx:#e8eaf0;--mu:#5a6070;font-family:'DM Mono',monospace}
+#root{height:100%}
+.app{background:var(--bg);color:var(--tx);min-height:100vh;min-height:100dvh;max-width:480px;margin:0 auto;position:relative;overflow-x:hidden}
+.sy{font-family:'Syne',sans-serif}
+.hdr{padding:env(safe-area-inset-top,18px) 16px 12px;padding-top:max(env(safe-area-inset-top),18px);border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:space-between}
+.hdr-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.5px}
+.hdr-acts{display:flex;gap:8px}
+.ibtn{background:var(--s2);border:1px solid var(--bd);color:var(--tx);width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px}
+.ibtn:active{background:var(--bd)}
+.tabs{display:flex;border-bottom:1px solid var(--bd)}
+.tab{flex:1;padding:10px 0;text-align:center;font-size:11px;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;text-transform:uppercase;letter-spacing:.5px;transition:all .15s}
+.tab.on{color:var(--ac);border-bottom-color:var(--ac)}
+.cards{padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:14px}
+.card.w2{grid-column:1/-1;background:linear-gradient(135deg,#0d1a12,#0a1520);border-color:#1a3028}
+.cl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.cv{font-family:'Syne',sans-serif;font-size:21px;font-weight:700;letter-spacing:-1px}
+.cv.big{font-size:30px}
+.csub{font-size:11px;margin-top:3px}
+.rbar{display:flex;justify-content:space-between;align-items:center;padding:6px 16px;font-size:10px;color:var(--mu);border-bottom:1px solid var(--bd)}
+.dot{width:6px;height:6px;background:var(--ac);border-radius:50%;display:inline-block;margin-right:5px;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.plist{padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.pc{background:var(--s1);border:1px solid var(--bd);border-left:3px solid transparent;border-radius:14px;padding:14px;cursor:pointer;transition:transform .1s}
+.pc:active{transform:scale(.98)}
+.pc.up{border-left-color:var(--ac)}.pc.dn{border-left-color:var(--rd)}
+.pr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.ptk{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+.pbg{font-size:9px;color:var(--mu);background:var(--s2);padding:2px 6px;border-radius:4px;margin-top:2px;display:inline-block}
+.ppnl{text-align:right}
+.ppv{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.ppp{font-size:11px;margin-top:1px}
+.psg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.sl{font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.sv{font-size:12px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.ld{animation:pulse 1.4s infinite;color:var(--bd)}
+.empty{text-align:center;padding:60px 24px}
+.eico{font-size:44px;margin-bottom:14px}
+.etit{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px}
+.esub{font-size:12px;color:var(--mu);line-height:1.7}
+.fab{position:fixed;bottom:max(24px,env(safe-area-inset-bottom));right:20px;background:var(--ac);color:#000;width:52px;height:52px;border-radius:16px;border:none;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,229,160,.3);z-index:40}
+.fab:active{transform:scale(.93)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:60;display:flex;align-items:flex-end;backdrop-filter:blur(4px)}
+.sh{background:var(--s1);border:1px solid var(--bd);border-radius:20px 20px 0 0;padding:24px 20px;padding-bottom:max(48px,env(safe-area-inset-bottom));width:100%;max-height:92vh;overflow-y:auto}
+.sht{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.xbtn{background:var(--s2);border:1px solid var(--bd);color:var(--mu);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.fg{margin-bottom:14px}
+.fl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block}
+.fi{width:100%;background:var(--s2);border:1px solid var(--bd);color:var(--tx);padding:12px 14px;border-radius:10px;font-family:'DM Mono',monospace;font-size:14px;outline:none;transition:border-color .15s;-webkit-appearance:none}
+.fi:focus{border-color:var(--ac)}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bp{width:100%;background:var(--ac);color:#000;border:none;padding:14px;border-radius:12px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px}
+.bp:active{opacity:.8}
+.bd2{width:100%;background:transparent;color:var(--rd);border:1px solid var(--rd);padding:12px;border-radius:12px;font-family:'DM Mono',monospace;font-size:13px;cursor:pointer;margin-top:8px}
+.dtl{padding:16px}
+.bk{background:none;border:none;color:var(--mu);font-family:'DM Mono',monospace;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:16px;padding:0}
+.dtk{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-1px}
+.dts{font-size:12px;color:var(--mu);margin-bottom:18px}
+.dtp{font-family:'Syne',sans-serif;font-size:36px;font-weight:700;letter-spacing:-1.5px;margin-bottom:20px}
+.dgr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.dst{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.dsl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.dsv{font-family:'Syne',sans-serif;font-size:17px;font-weight:600}
+.secl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.eb{background:var(--s2);border:1px solid var(--bd);color:var(--tx);padding:10px 16px;border-radius:10px;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer}
+textarea.fi{min-height:80px;resize:none;line-height:1.6}
+.scan{padding:16px}
+.dz{border:2px dashed var(--bd);border-radius:14px;padding:36px 20px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:14px}
+.dz:hover,.dz:active{border-color:var(--ac)}
+.dzi{font-size:36px;margin-bottom:10px}
+.dzt{font-size:13px;color:var(--mu);line-height:1.5}
+.dzh{font-size:11px;color:#3a4050;margin-top:6px}
+.prev{max-width:100%;border-radius:10px;margin:0 0 14px;display:block}
+.anlz{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--s2);border-radius:10px;font-size:12px;color:var(--mu);margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sp{width:14px;height:14px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.aib{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+.ail{font-size:10px;color:var(--ac);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.ait{font-size:12px;white-space:pre-wrap;line-height:1.7}
+.ic{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:8px}
+.itk{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.im{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:11px;margin:10px 0}
+.iml{font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.bim{background:var(--ac);color:#000;border:none;padding:10px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;width:100%}
+.bim.done{background:#0a2018;color:var(--ac)}
+.bia{background:var(--s2);color:var(--tx);border:1px solid var(--bd);padding:12px;border-radius:12px;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;width:100%;margin-bottom:10px}
+.err{background:#1a0808;border:1px solid #3a1010;border-radius:10px;padding:12px;font-size:12px;color:#ff8080;line-height:1.6;margin-bottom:10px;white-space:pre-wrap}
+.sum{padding:16px;display:flex;flex-direction:column;gap:10px}
+.sc{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.sbt{background:var(--bg);border-radius:4px;height:4px;margin:8px 0 12px}
+.sbf{height:100%;border-radius:4px;background:var(--ac)}
+.ssg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11px}
+.ins{margin:12px 16px;background:linear-gradient(135deg,#0d2018,#0a1825);border:1px solid #1a3028;border-radius:14px;padding:16px}
+.int{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:8px}
+.ini{font-size:12px;color:var(--mu);line-height:1.9;margin-bottom:12px}
+.ini b{color:var(--tx)}
+.ind{background:var(--s2);border:1px solid var(--bd);color:var(--mu);padding:9px 14px;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;width:100%}
+.note{background:var(--s2);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--mu);line-height:1.6;margin-bottom:10px}
+.note b{color:var(--tx)}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ── helpers ───────────────────────────────────────────────────
+const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+const fmt = (n, dp=2) => n==null||isNaN(n) ? "–" : Math.abs(n).toLocaleString("en-AU",{minimumFractionDigits:dp,maximumFractionDigits:dp});
+const fmtSign = (n, dp=2) => n==null ? "–" : (n>=0?"+":"-")+"$"+fmt(n,dp);
+const clr = n => n==null?"#5a6070":n>=0?"#00e5a0":"#ff4560";
+
+// ── storage ───────────────────────────────────────────────────
+const KEY = "cmc_tracker_v3";
+const storeSave = d => { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {} };
+const storeLoad = () => { try { const r=localStorage.getItem(KEY); if(r) return JSON.parse(r); } catch {} return []; };
+
+// ── price fetch ───────────────────────────────────────────────
+async function fetchLivePrice(ticker, exchange) {
+  const sym = exchange==="ASX" ? ticker.replace(/\.AX$/i,"")+".AX" : ticker;
+  const urls = [
+    `https://corsproxy.io/?${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/"+sym+"?interval=1d&range=1d")}`,
+    `https://api.allorigins.win/get?url=${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/"+sym+"?interval=1d&range=1d")}`
+  ];
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {signal:AbortSignal.timeout(7000)});
+      if (!res.ok) continue;
+      const raw = await res.json();
+      const data = raw.contents ? JSON.parse(raw.contents) : raw;
+      const meta = data?.chart?.result?.[0]?.meta;
+      if (!meta?.regularMarketPrice) continue;
+      const prev = meta.chartPreviousClose || meta.previousClose || meta.regularMarketPrice;
+      return { price: meta.regularMarketPrice, change: (meta.regularMarketPrice-prev)/prev*100 };
+    } catch {}
+  }
+  return null;
+}
+
+// ── SummaryCards ──────────────────────────────────────────────
+function SummaryCards({pos}) {
+  let tv=0,tc=0,wins=0,hasLive=false;
+  pos.forEach(p=>{
+    const c=p.qty*p.avgCost, pr=p.livePrice??p.manualPrice;
+    const v=pr!=null?pr*p.qty:null;
+    tc+=c;
+    if(v!=null){tv+=v;hasLive=true;}
+    if(v!=null&&v-c>=0)wins++;
+  });
+  const pnl=tv-tc, pct=tc>0?pnl/tc*100:0, wr=pos.length>0?Math.round(wins/pos.length*100):null;
+  return (
+    <div className="cards">
+      <div className="card w2">
+        <div className="cl">Total Portfolio Value</div>
+        <div className="cv big">{hasLive?"$"+fmt(tv):pos.length?"Fetching…":"–"}</div>
+        {hasLive&&<div className="csub" style={{color:clr(pnl)}}>{fmtSign(pnl)} ({pct>=0?"+":""}{fmt(pct)}%) total P&L</div>}
+      </div>
+      <div className="card">
+        <div className="cl">Unrealised P&L</div>
+        <div className="cv" style={{color:clr(pnl)}}>{hasLive?fmtSign(pnl):"–"}</div>
+        {hasLive&&<div className="csub" style={{color:clr(pnl)}}>{pct>=0?"+":""}{fmt(pct)}%</div>}
+      </div>
+      <div className="card">
+        <div className="cl">Positions</div>
+        <div className="cv">{pos.length}</div>
+        {wr!=null&&<div className="csub" style={{color:clr(wr-50)}}>{wr}% in profit</div>}
+      </div>
+    </div>
+  );
+}
+
+// ── PCard ─────────────────────────────────────────────────────
+function PCard({p,onClick}) {
+  const pr=p.livePrice??p.manualPrice;
+  const cost=p.qty*p.avgCost, val=pr!=null?pr*p.qty:null;
+  const pnl=val!=null?val-cost:null, pct=cost>0&&pnl!=null?pnl/cost*100:null;
+  return (
+    <div className={`pc ${pnl==null?"":pnl>=0?"up":"dn"}`} onClick={onClick}>
+      <div className="pr">
+        <div><div className="ptk">{p.ticker}</div><span className="pbg">{p.exchange}·{p.currency}</span></div>
+        <div className="ppnl">
+          <div className="ppv" style={{color:clr(pnl)}}>{p.fetching?<span className="ld">···</span>:pnl!=null?fmtSign(pnl):"–"}</div>
+          {pct!=null&&<div className="ppp" style={{color:clr(pnl)}}>{pnl>=0?"+":""}{fmt(pct)}%</div>}
+        </div>
+      </div>
+      <div className="psg">
+        <div><div className="sl">Price</div><div className={`sv ${p.fetching?"ld":""}`}>{p.fetching?"···":pr!=null?"$"+fmt(pr,3):"–"}</div></div>
+        <div><div className="sl">Avg Cost</div><div className="sv">${fmt(p.avgCost,3)}</div></div>
+        <div><div className="sl">Qty</div><div className="sv">{fmt(p.qty,0)}</div></div>
+      </div>
+    </div>
+  );
+}
+
+// ── AddModal ──────────────────────────────────────────────────
+function AddModal({init,onSave,onClose}) {
+  const [f,setF] = useState(init||{ticker:"",name:"",exchange:"ASX",qty:"",avgCost:"",currency:"AUD",manualPrice:""});
+  const set=(k,v)=>setF(p=>({...p,[k]:v}));
+  const save=()=>{
+    if(!f.ticker.trim()||!f.qty||!f.avgCost){alert("Need ticker, qty and avg cost.");return;}
+    onSave({...f,ticker:f.ticker.toUpperCase().trim(),qty:parseFloat(f.qty),avgCost:parseFloat(f.avgCost),manualPrice:f.manualPrice?parseFloat(f.manualPrice):null});
+  };
+  return (
+    <div className="ov" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="sh">
+        <div className="sht"><span>{init?.id?"Edit":"Add"} Position</span><button className="xbtn" onClick={onClose}>✕</button></div>
+        <div className="fg"><label className="fl">Ticker / Code</label><input className="fi" value={f.ticker} onChange={e=>set("ticker",e.target.value.toUpperCase())} placeholder="BHP, AMD, APA" autoCapitalize="characters" /></div>
+        <div className="fg"><label className="fl">Name (optional)</label><input className="fi" value={f.name} onChange={e=>set("name",e.target.value)} placeholder="BHP Group Ltd" /></div>
+        <div className="r2">
+          <div className="fg"><label className="fl">Exchange</label><select className="fi" value={f.exchange} onChange={e=>set("exchange",e.target.value)}><option>ASX</option><option>NASDAQ</option><option>NYSE</option><option>OTHER</option></select></div>
+          <div className="fg"><label className="fl">Currency</label><select className="fi" value={f.currency} onChange={e=>set("currency",e.target.value)}><option>AUD</option><option>USD</option></select></div>
+        </div>
+        <div className="r2">
+          <div className="fg"><label className="fl">Quantity</label><input className="fi" type="number" inputMode="decimal" value={f.qty} onChange={e=>set("qty",e.target.value)} placeholder="0" /></div>
+          <div className="fg"><label className="fl">Avg Cost ($)</label><input className="fi" type="number" inputMode="decimal" step="0.001" value={f.avgCost} onChange={e=>set("avgCost",e.target.value)} placeholder="0.00" /></div>
+        </div>
+        <div className="fg"><label className="fl">Manual Price (optional)</label><input className="fi" type="number" inputMode="decimal" step="0.001" value={f.manualPrice} onChange={e=>set("manualPrice",e.target.value)} placeholder="Blank = fetch live price" /></div>
+        <button className="bp" onClick={save}>Save Position</button>
+      </div>
+    </div>
+  );
+}
+
+// ── DetailView ────────────────────────────────────────────────
+function DetailView({p,onBack,onEdit,onDelete,onNotesSave}) {
+  const [notes,setNotes]=useState(p.notes||"");
+  const [saved,setSaved]=useState(false);
+  const pr=p.livePrice??p.manualPrice;
+  const cost=p.qty*p.avgCost, val=pr!=null?pr*p.qty:null;
+  const pnl=val!=null?val-cost:null, pct=cost>0&&pnl!=null?pnl/cost*100:null;
+  const doSave=()=>{onNotesSave(notes);setSaved(true);setTimeout(()=>setSaved(false),1400);};
+  return (
+    <div className="dtl">
+      <button className="bk" onClick={onBack}>← Back</button>
+      <div className="dtk">{p.ticker}</div>
+      <div className="dts">{p.name||`${p.exchange} · ${p.currency}`}{p.dayChange!=null&&<span style={{color:clr(p.dayChange),marginLeft:8}}>({p.dayChange>=0?"+":""}{fmt(p.dayChange)}% today)</span>}</div>
+      <div className="dtp" style={{color:clr(pnl)}}>{pr?"$"+fmt(pr,3):"–"}</div>
+      <div className="dgr">
+        {[["Market Value",val!=null?"$"+fmt(val):"–",null],["Unrealised P&L",pnl!=null?fmtSign(pnl):"–",pnl],["Return %",pct!=null?(pct>=0?"+":"")+fmt(pct)+"%":"–",pct],["Cost Basis","$"+fmt(cost),null],["Quantity",fmt(p.qty,0),null],["Avg Cost","$"+fmt(p.avgCost,3),null]].map(([l,v,c])=>(
+          <div className="dst" key={l}><div className="dsl">{l}</div><div className="dsv" style={{color:c!=null?clr(c):"var(--tx)"}}>{v}</div></div>
+        ))}
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <div className="secl">Notes</div>
+        <button className="eb" onClick={onEdit}>Edit Position</button>
+      </div>
+      <textarea className="fi" value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Trade thesis, stop loss, targets…" />
+      <button className="bp" onClick={doSave}>{saved?"Saved ✓":"Save Notes"}</button>
+      <button className="bd2" onClick={onDelete}>Remove Position</button>
+    </div>
+  );
+}
+
+// ── ScanTab ───────────────────────────────────────────────────
+function ScanTab({onImport}) {
+  const [preview,setPreview]=useState(null);
+  const [analyzing,setAnalyzing]=useState(false);
+  const [msg,setMsg]=useState(null);
+  const [isErr,setIsErr]=useState(false);
+  const [extracted,setExtracted]=useState([]);
+  const [done,setDone]=useState({});
+  const fileRef=useRef();
+
+  const handle=async(file)=>{
+    if(!file)return;
+    setMsg(null);setIsErr(false);setExtracted([]);setDone({});
+    const reader=new FileReader();
+    reader.onload=async e=>{
+      setPreview(e.target.result);
+      setAnalyzing(true);
+      try {
+        const b64=e.target.result.split(",")[1];
+        const resp=await fetch("https://api.anthropic.com/v1/messages",{
+          method:"POST",
+          headers:{"Content-Type":"application/json","anthropic-dangerous-direct-browser-calls":"true"},
+          body:JSON.stringify({
+            model:"claude-sonnet-4-20250514",
+            max_tokens:1000,
+            messages:[{role:"user",content:[
+              {type:"image",source:{type:"base64",media_type:file.type,data:b64}},
+              {type:"text",text:`Analyse this CMC Invest / CMC Markets screenshot. Extract every stock or ETF holding visible on screen.
+
+Return ONLY a valid JSON array — no markdown fences, no explanation, nothing else. Each object must have:
+- ticker (string): the stock/ETF code
+- name (string or null): company name if visible  
+- exchange (string): "ASX", "NYSE", "NASDAQ", or "OTHER"
+- qty (number): units/shares held
+- avgCost (number): average purchase price per unit
+- currentPrice (number or null): current market price if shown
+- currency (string): "AUD" or "USD"
+
+If this is not a portfolio/holdings screen return exactly: {"error":"Not a holdings screen"}
+
+JSON only:`}
+            ]}]
+          })
+        });
+        if(!resp.ok){
+          const t=await resp.text();
+          throw new Error("API "+resp.status+": "+t.slice(0,200));
+        }
+        const data=await resp.json();
+        const text=(data.content||[]).map(c=>c.text||"").join("").trim().replace(/```json|```/g,"").trim();
+        try {
+          const parsed=JSON.parse(text);
+          if(parsed.error){setIsErr(true);setMsg(parsed.error+"\n\nTip: Screenshot your Holdings or Portfolio page in CMC Invest.");}
+          else if(Array.isArray(parsed)&&parsed.length>0){setExtracted(parsed);setMsg("Found "+parsed.length+" position"+(parsed.length>1?"s":"")+". Review below and import.");}
+          else{setIsErr(true);setMsg("No positions found. Try a clearer screenshot of your CMC holdings list.");}
+        } catch {setIsErr(true);setMsg("Parse error. Raw response:\n"+text.slice(0,400));}
+      } catch(err){setIsErr(true);setMsg("Error: "+err.message);}
+      setAnalyzing(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const imp=(p,i)=>{onImport([p]);setDone(d=>({...d,[i]:true}));};
+  const impAll=()=>{onImport(extracted);const d={};extracted.forEach((_,i)=>d[i]=true);setDone(d);};
+
+  return (
+    <div className="scan">
+      <div style={{fontFamily:"'Syne',sans-serif",fontSize:15,fontWeight:700,marginBottom:6}}>AI Screenshot Scan</div>
+      <div style={{fontSize:12,color:"var(--mu)",lineHeight:1.6,marginBottom:16}}>Screenshot your CMC holdings screen, upload it here, and Claude will extract your positions.</div>
+      <div className="dz" onClick={()=>fileRef.current?.click()}>
+        <div className="dzi">📸</div>
+        <div className="dzt">Tap to upload CMC screenshot</div>
+        <div className="dzh">Holdings · Portfolio · Positions screen</div>
+      </div>
+      <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>handle(e.target.files[0])} />
+      {preview&&<img src={preview} className="prev" alt="preview" />}
+      {analyzing&&<div className="anlz"><div className="sp"/><span>Analysing with Claude AI…</span></div>}
+      {msg&&(isErr
+        ?<div className="err">{msg}</div>
+        :<div className="aib"><div className="ail">⚡ AI Result</div><div className="ait">{msg}</div></div>
+      )}
+      {extracted.length>0&&<>
+        <button className="bia" onClick={impAll}>Import All {extracted.length} Positions →</button>
+        {extracted.map((p,i)=>(
+          <div className="ic" key={i}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+              <span className="itk">{p.ticker}</span>
+              <span style={{fontSize:10,color:"var(--mu)"}}>{p.exchange}·{p.currency}</span>
+            </div>
+            {p.name&&<div style={{fontSize:11,color:"var(--mu)",marginBottom:8}}>{p.name}</div>}
+            <div className="im">
+              {[["Qty",p.qty??"–"],["Avg Cost",p.avgCost?"$"+p.avgCost:"–"],["Price",p.currentPrice?"$"+p.currentPrice:"live"]].map(([l,v])=>(
+                <div key={l}><div className="iml">{l}</div><div>{v}</div></div>
+              ))}
+            </div>
+            <button className={"bim"+(done[i]?" done":"")} onClick={()=>imp(p,i)} disabled={done[i]}>{done[i]?"✓ Imported":"Import"}</button>
+          </div>
+        ))}
+      </>}
+      <div style={{height:40}}/>
+    </div>
+  );
+}
+
+// ── SumTab ────────────────────────────────────────────────────
+function SumTab({pos}) {
+  if(!pos.length)return<div style={{padding:32,textAlign:"center",color:"var(--mu)",fontSize:13}}>No positions yet.</div>;
+  let tv=0;
+  const e=pos.map(p=>{
+    const pr=p.livePrice??p.manualPrice, c=p.qty*p.avgCost;
+    const v=pr!=null?pr*p.qty:null, pnl=v!=null?v-c:null;
+    if(v)tv+=v;
+    return {...p,v,c,pnl};
+  }).sort((a,b)=>(b.v||0)-(a.v||0));
+  return (
+    <div className="sum">
+      {e.map(p=>{
+        const wt=tv>0&&p.v?p.v/tv*100:0;
+        return (
+          <div className="sc" key={p.id}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+              <div><span style={{fontFamily:"'Syne',sans-serif",fontWeight:700}}>{p.ticker}</span><span style={{fontSize:10,color:"var(--mu)",marginLeft:8}}>{p.exchange}</span></div>
+              <span style={{fontSize:12,color:"var(--mu)"}}>{fmt(wt)}%</span>
+            </div>
+            <div className="sbt"><div className="sbf" style={{width:Math.min(wt,100)+"%"}}/></div>
+            <div className="ssg">
+              {[["Value",p.v?"$"+fmt(p.v):"–",null],["P&L",p.pnl!=null?fmtSign(p.pnl):"–",p.pnl],["Return",p.pnl!=null&&p.c>0?(p.pnl>=0?"+":"")+fmt(p.pnl/p.c*100)+"%":"–",p.pnl]].map(([l,v,c])=>(
+                <div key={l}><div style={{fontSize:9,color:"var(--mu)",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{l}</div><div style={{color:c!=null?clr(c):"var(--tx)"}}>{v}</div></div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+      <div style={{height:40}}/>
+    </div>
+  );
+}
+
+// ── InstallBanner ─────────────────────────────────────────────
+function InstallBanner({onDismiss}) {
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const standalone=window.navigator.standalone||window.matchMedia("(display-mode: standalone)").matches;
+  if(standalone)return null;
+  return (
+    <div className="ins">
+      <div className="int">📱 Add to Home Screen</div>
+      <div className="ini">
+        {ios?<>
+          1. Tap the <b>Share</b> button (□↑) in Safari<br/>
+          2. Scroll down → tap <b>"Add to Home Screen"</b><br/>
+          3. Tap <b>Add</b> — opens like a native app ✓
+        </>:<>
+          1. Tap <b>⋮</b> menu in Chrome (top right)<br/>
+          2. Tap <b>"Add to Home screen"</b><br/>
+          3. Tap <b>Add</b> — done ✓
+        </>}
+      </div>
+      <button className="ind" onClick={onDismiss}>Got it, dismiss</button>
+    </div>
+  );
+}
+
+// ── App ───────────────────────────────────────────────────────
+function App() {
+  const [pos,setPos]=useState(()=>storeLoad());
+  const [tab,setTab]=useState("positions");
+  const [view,setView]=useState("list");
+  const [detailId,setDetailId]=useState(null);
+  const [editData,setEditData]=useState(null);
+  const [updated,setUpdated]=useState("–");
+  const [refreshing,setRefreshing]=useState(false);
+  const [showInstall,setShowInstall]=useState(()=>!localStorage.getItem("install_ok"));
+
+  const upd=useCallback(fn=>setPos(prev=>{const next=fn(prev);storeSave(next);return next;}),[]);
+
+  const refresh=useCallback(async(list)=>{
+    const cur=list||pos;
+    if(!cur.length)return;
+    setRefreshing(true);
+    upd(p=>p.map(x=>({...x,fetching:true})));
+    await Promise.all(cur.map(async p=>{
+      const r=await fetchLivePrice(p.ticker,p.exchange);
+      upd(prev=>prev.map(x=>x.id===p.id?{...x,...(r?{livePrice:r.price,dayChange:r.change}:{}),fetching:false}:x));
+    }));
+    setUpdated(new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"}));
+    setRefreshing(false);
+  },[pos,upd]);
+
+  useEffect(()=>{if(pos.length)refresh(pos);},[]);
+
+  const savePos=form=>{
+    if(form.id){upd(p=>p.map(x=>x.id===form.id?{...x,...form}:x));setView("detail");}
+    else {
+      const np={id:genId(),livePrice:null,dayChange:null,notes:"",fetching:false,...form};
+      upd(p=>[...p,np]);
+      fetchLivePrice(form.ticker,form.exchange).then(r=>{
+        if(r)upd(p=>p.map(x=>x.id===np.id?{...x,livePrice:r.price,dayChange:r.change}:x));
+      });
+      setView("list");
+    }
+  };
+
+  const handleImport=arr=>{
+    arr.forEach(p=>{
+      if(!p.ticker)return;
+      const tk=p.ticker.toUpperCase();
+      upd(prev=>{
+        const ex=prev.find(x=>x.ticker===tk);
+        if(ex)return prev.map(x=>x.ticker===tk?{...x,qty:p.qty||x.qty,avgCost:p.avgCost||x.avgCost,...(p.currentPrice?{manualPrice:p.currentPrice}:{})}:x);
+        return [...prev,{id:genId(),ticker:tk,name:p.name||"",exchange:p.exchange||"ASX",qty:p.qty||0,avgCost:p.avgCost||0,currency:p.currency||"AUD",manualPrice:p.currentPrice||null,livePrice:null,dayChange:null,notes:"",fetching:false}];
+      });
+      fetchLivePrice(tk,p.exchange||"ASX").then(r=>{
+        if(r)upd(prev=>prev.map(x=>x.ticker===tk?{...x,livePrice:r.price,dayChange:r.change}:x));
+      });
+    });
+    setTimeout(()=>setTab("positions"),300);
+  };
+
+  const dp=pos.find(p=>p.id===detailId);
+
+  if(view==="detail"&&dp) return (
+    <div className="app">
+      <DetailView p={dp} onBack={()=>setView("list")}
+        onEdit={()=>{setEditData(dp);setView("edit");}}
+        onDelete={()=>{if(window.confirm("Remove "+dp.ticker+"?")){upd(p=>p.filter(x=>x.id!==detailId));setView("list");}}}
+        onNotesSave={notes=>upd(p=>p.map(x=>x.id===detailId?{...x,notes}:x))} />
+      {view==="edit"&&editData&&<AddModal init={editData} onSave={savePos} onClose={()=>setView("detail")} />}
+    </div>
+  );
+
+  return (
+    <div className="app">
+      <div className="hdr">
+        <div className="hdr-title sy">CMC <span style={{color:"var(--ac)"}}>Tracker</span></div>
+        <div className="hdr-acts">
+          <button className="ibtn" onClick={()=>setShowInstall(v=>!v)} title="Add to home screen">🏠</button>
+          <button className="ibtn" onClick={()=>refresh()} title="Refresh prices">
+            {refreshing?<div className="sp"/>:"↻"}
+          </button>
+        </div>
+      </div>
+
+      <div className="tabs">
+        {[["positions","Positions"],["scan","AI Scan"],["summary","Summary"]].map(([t,l])=>(
+          <div key={t} className={"tab"+(tab===t?" on":"")} onClick={()=>setTab(t)}>{l}</div>
+        ))}
+      </div>
+
+      {tab==="positions"&&<>
+        {showInstall&&<InstallBanner onDismiss={()=>{setShowInstall(false);localStorage.setItem("install_ok","1");}} />}
+        <div className="rbar">
+          <div><span className="dot"/>Updated {updated}</div>
+          <div>{pos.length} position{pos.length!==1?"s":""}</div>
+        </div>
+        <SummaryCards pos={pos} />
+        {pos.length===0
+          ?<div className="empty"><div className="eico">📊</div><div className="etit">No positions yet</div><div className="esub">Tap <b>+</b> to add manually,<br/>or use <b>AI Scan</b> to import from a CMC screenshot.</div></div>
+          :<div className="plist">{pos.map(p=><PCard key={p.id} p={p} onClick={()=>{setDetailId(p.id);setView("detail");}}/>)}</div>
+        }
+        <div style={{height:80}}/>
+        <button className="fab" onClick={()=>{setEditData(null);setView("add");}}>+</button>
+      </>}
+
+      {tab==="scan"&&<ScanTab onImport={handleImport} />}
+      {tab==="summary"&&<SumTab pos={pos} />}
+
+      {view==="add"&&<AddModal onSave={savePos} onClose={()=>setView("list")} />}
+      {view==="edit"&&editData&&<AddModal init={editData} onSave={savePos} onClose={()=>setView("list")} />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
